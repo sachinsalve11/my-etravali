@@ -1,71 +1,47 @@
 package com.etravelli.etraveli_apps.Service;
 
 import com.etravelli.etraveli_apps.Interface.RentalInfoInterface;
-import com.etravelli.etraveli_apps.model.Customer;
 import com.etravelli.etraveli_apps.model.Movie;
-import com.etravelli.etraveli_apps.model.MovieRental;
 import com.etravelli.etraveli_apps.model.Rent;
+import com.etravelli.etraveli_apps.model.RentInfo;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.HashMap;
 
 @Service
 @Slf4j
 public class RentalInfoService implements RentalInfoInterface {
 
-    @Autowired
-    Rent rent;
+
+    private Rent rent=new Rent();
 
     public String processStatement(Rent rent) {
-
-        log.info( "Amount owed is " + rent.getTotalAmout() + "\n");
+        log.info("Amount owed is " + rent.getTotalAmout() + "\n");
         log.info("You earned " + rent.getUserPoints() + " frequent points\n");
         return rent.toString();
     }
 
     @Override
-    public String processRent() {
-        return "";
-    }
-
-    @Override
-    public Rent processRent(Customer customer, HashMap<String, Movie> movies) {
+    public Rent processRent(RentInfo rentInfo) {
         double totalAmount = 0;
         int frequentEnterPoints = 0;
-        String result = "Rental Record for " + customer.getName() + "\n";
-        for (MovieRental r : customer.getRentals()) {
-            double thisAmount = 0;
+        StringBuilder result = new StringBuilder("Rental Record for " + rentInfo.getCustomer().getName() + "\n");
 
-            // determine amount for each movie
-            if (movies.get(r.getMovieId()).getCode().equals("regular")) {
-                thisAmount = 2;
-                if (r.getDays() > 2) {
-                    thisAmount = ((r.getDays() - 2) * 1.5) + thisAmount;
-                }
-            } else if (movies.get(r.getMovieId()).getCode().equals("new")) {
-                thisAmount = r.getDays() * 3;
-            }else if(movies.get(r.getMovieId()).getCode().equals("childrens")) {
-                thisAmount = 1.5;
-                if (r.getDays() > 3) {
-                    thisAmount = ((r.getDays() - 3) * 1.5) + thisAmount;
-                }
-            }
+        for (Movie movie : rentInfo.getMovieList()) {
 
-            //add frequent bonus points
-            frequentEnterPoints++;
-            // add bonus for a two day new release rental
-            if (movies.get(r.getMovieId()).getCode() == "new" && r.getDays() > 2) frequentEnterPoints++;
+            double thisAmount = movie.calculateAmount(movie.getRentDays());
 
-            //print figures for this rental
-            result += "\t" + movies.get(r.getMovieId()).getTitle() + "\t" + thisAmount + "\n";
-            totalAmount = totalAmount + thisAmount;
+            // Add basic point and any bonus points based on movie type
+            frequentEnterPoints++;  // 1 point for every rental
+            frequentEnterPoints += movie.getMovieType().getBonusPoints(movie.getRentDays());
+
+            // Append rental details
+            result.append("\t").append(movie.getTitle()).append("\t").append(thisAmount).append("\n");
+            totalAmount += thisAmount;
         }
+
         rent.setTotalAmout(String.valueOf(totalAmount));
         rent.setUserPoints(String.valueOf(frequentEnterPoints));
         return rent;
     }
-
 
 }

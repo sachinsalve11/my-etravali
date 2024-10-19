@@ -1,19 +1,14 @@
 package com.etravelli.etraveli_apps.model;
 
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
-@Data
+@Getter
+@Setter
+@ToString
 public class Rent {
     public String totalAmout;
-
-    @Override
-    public String toString() {
-        return "Rent{" +
-                "totalAmout='" + totalAmout + '\'' +
-                ", userPoints='" + userPoints + '\'' +
-                '}';
-    }
-
     public String userPoints;
 }
